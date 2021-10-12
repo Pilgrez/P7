@@ -4,8 +4,8 @@ var express = require('express'),
   bodyParser = require('body-parser');
 
 var DB = require(__dirname + '/src/db.js'),
-  ARG = require(__dirname + '/src/arg.js');
-  //MAPPER = require(__dirname + '/src/mapper.js');
+  ARG = require(__dirname + '/src/arg.js'),
+  MAPPER = require(__dirname + '/src/mapper.js');
 
 const port = 8080;
 var app = express();
@@ -25,7 +25,7 @@ async function start() {
   app.use(express.static(__dirname + '/uploads/'));
 
   // map all route
-  //MAPPER.map(app);
+  MAPPER.register(app);
 
   // start server
   app.listen(port, function () {

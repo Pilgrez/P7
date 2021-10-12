@@ -11,8 +11,8 @@ function init() {
       database: process.env.DB_DATABASE,
       password: process.env.DB_PASS
     };
-    console.log(process.env);
-    console.log(module.exports);
+    //console.log(process.env);
+    //console.log(module.exports);
   } catch (e) {
     console.log(e, "Cannot start: error loading env");
     process.exit(2);
