@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Login - Social Network</title>
+    <link rel="stylesheet" href="/css/master.css">
+    <link rel="stylesheet" href="/css/bootstrap.css">
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="card login-card" style="max-width: 450px;">
+        <div class="card-body">
+
+          <h3>Social Network</h3>
+          <p>login to your social account with your email and password.</p>
+
+          <div class="spinner-border text-primary block mh-auto" role="status" id="loading">
+            <span class="visually-hidden"></span>
+          </div>
+
+          <p class="lead text-danger" id="error"></p>
+
+          <div class="form-floating mb-3">
+            <input class="form-control" type="text" z-key="email" id="email" placeholder="Email">
+            <label for="fl-text">Email</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input class="form-control" type="password" z-key="password" id="password" placeholder="Password">
+            <label for="fl-text">Password</label>
+          </div>
+
+          <button type="button" class="btn btn-sm btn-outline-primary" id="btn-register">Register</button>
+          <button type="button" class="btn btn-sm btn-translucent-primary" id="btn-login">Login</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="post" style="display: none;"></div>
+
+    <script src="/js/login.js" charset="utf-8"></script>
+
+  </body>
+
+
+</html>

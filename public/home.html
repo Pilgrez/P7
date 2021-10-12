@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Home - Social Network</title>
+    <link rel="stylesheet" href="/css/all.min.css">
+    <link rel="stylesheet" href="/css/master.css">
+    <link rel="stylesheet" href="/css/bootstrap.css">
+  </head>
+
+  <body>
+
+    <div class="nav">
+      <p class="lead">Social Network</p>
+
+      <div class="spinner-grow text-primary" role="status" id="loading"></div>
+    </div>
+
+    <div id="main-content">
+
+
+    </div>
+
+    <!-- NOTE: New Post Button -->
+    <div class="new-post">
+      <i class="fad fa-feather-alt"></i>
+      <p>New Post</p>
+    </div>
+
+    <!-- NOTE: New Post Modal -->
+    <div class="modal" tabindex="-1" role="dialog" id="new-post-modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h5 class="modal-title">New Post</h5>
+            <button type="button" class="btn-close"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="form-floating">
+              <textarea class="form-control" id="post-content" style="height: 120px;" placeholder=""></textarea>
+              <label for="post-content">Your Post:</label>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary btn-sm" id="create">Create</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <input type="hidden" id="user_token" value="@@TOKEN@@">
+    <script src="/js/home.js"></script>
+  </body>
+
+</html>

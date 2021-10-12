@@ -1,0 +1,90 @@
+@font-face {
+  font-family: "WorkSans";
+  src: url("/fonts/WorkSans-Regular.ttf") format("truetype");
+}
+
+:root {
+  --primary: #2979ff;
+}
+
+body {
+  font-family: "WorkSans" !important;
+}
+
+.login-card {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 80px;
+}
+
+/* NavBar */
+.nav {
+  border-bottom: 1px solid black;
+  background-color: rgba(0,0,0,0.20);
+  color: black;
+  min-height: 80px;
+  max-height: 80px;
+}
+.nav .lead {
+  margin: auto 45px;
+}
+
+/* New Post */
+.new-post {
+  display: flex;
+  background: var(--primary);
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  color: white;
+  margin: 25px;
+  border-radius: 25px;
+  transition: all linear 250ms;
+}
+.new-post i {
+  margin: 10px;
+}
+
+.new-post p {
+  display: none;
+  margin: auto 10px auto 0;
+  color: white;
+  padding: 0;
+  transition: all linear 250ms;
+}
+.new-post:hover p {
+  display: block;
+  cursor: pointer;
+}
+
+/* Post */
+
+.post {
+  max-width: 500px;
+  margin: auto 50px;
+}
+.post-date {
+  display: inline-block;
+}
+.post-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  border: 1px solid black;
+  display: inline-block;
+}
+
+
+/* Toast */
+#toast-container {
+  position: absolute;
+  z-index: 99;
+  right: 0;
+  margin: 25px;
+}
+
+/* Tool */
+.block { display: block; }
+
+/* Margin */
+.mh-auto { margin-left: auto; margin-right: auto; }
