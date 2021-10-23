@@ -102,7 +102,7 @@ async function createAvatar(email) {
   if (!r.result) return r;
 
   try {
-    const out = __dirname + `/../public/users/${r.user.userId}.svg`;
+    const out = __dirname + `/../public/img/users/${r.user.userId}.svg`;
     const color = getRandomColor();
     var avatar = fs.readFileSync(__dirname + '/../public/img/default-avatar.svg', 'utf-8');
     avatar = avatar.replace(new RegExp(/@@COLOR@@/, 'g'), color);
