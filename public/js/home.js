@@ -7,7 +7,25 @@ function start() {
   S.newPostHandler = new NewPostHandler();
   S.mainFrame = new MainFrame();
 
+  S.app = new Vue({
+    el: "#main-content",
+    data: {
+      posts: []
+    },
+    methods: {
+      togglePostLike: togglePostLike
+    }
+  });
+
   loading(false);
+}
+
+async function togglePostLike(postId) {
+  loading(true);
+  console.log("LIKE POST", postId);
+  var result = await Api.send("/posts/like", {postId:postId});
+
+  console.log("POST LIKE RESULT", result);
 }
 
 /* New Post Handler */
@@ -131,26 +149,14 @@ class MainFrame {
       return;
     }
 
-    S.posts = body.posts;
-    this.build();
+    S.app.posts = body.posts;
     loading(false);
-  }
-
-  async build() {
-    this.elem.innerHTML = "";
-    this.posts = [];
-
-    for (var i = 0; i < S.posts.length; i++) {
-      var p = new Post(S.posts[i]);
-      p.build(this.elem);
-      this.posts.push(p);
-    }
   }
 }
 
 /*
   Post
-*/
+
 
 class Post {
 
@@ -174,7 +180,7 @@ class Post {
         </div>
 
         <div class="card-footer fs-sm text-muted">
-          <i class="fal fa-heart"></i>
+          <i class="fal fa-heart like"></i>
           <i class="fal fa-comment"></i>
         </div>
 
@@ -199,6 +205,7 @@ class Post {
   }
 
 }
+*/
 
 /*
   Form
@@ -235,7 +242,9 @@ function getForm(list) {
 */
 
 function loading(show) {
-  document.querySelector('#loading').style.display = show === true ? "block" : "none";
+  // use flex -> just dont show it, but dont change nav layout
+  document.querySelector('#nav-loading').style.display = show === true ? "block" : "none";
+  document.querySelector('#nav-avatar').style.marginLeft = show === true ? "20px" : "auto";
 }
 
 function setError(err) { document.querySelector('#error').innerHTML = err; }

@@ -12,13 +12,30 @@
   <body>
 
     <div class="nav">
+      <img class="nav-logo" src="/img/logo.svg">
       <p class="lead">Social Network</p>
-
-      <div class="spinner-grow text-primary" role="status" id="loading"></div>
+      <div class="spinner-grow text-primary" role="status" id="nav-loading"></div>
+      <img id="nav-avatar" src="@@USER_AVATAR@@">
     </div>
 
     <div id="main-content">
 
+      <template v-for="post in posts">
+        <div class="card card-hover post" v-bind:id="post.postId">
+
+          <div class="card-body">
+            <img class="post-avatar" v-bind:src="post.avatar">
+            <p class="post-date">{{new Date(post.creationDate).toLocaleString()}}</p>
+            <p class="card-text fs-sm">{{post.content}}</p>
+          </div>
+
+          <div class="card-footer fs-sm text-muted">
+            <i class="fal fa-heart" v-on:click="togglePostLike(post.postId)"></i> {{post.likes}}
+            <i class="fal fa-comment"></i> {{post.comments}}
+          </div>
+
+        </div>
+      </template>
 
     </div>
 
@@ -57,6 +74,7 @@
     <div id="toast-container"></div>
 
     <input type="hidden" id="user_token" value="@@TOKEN@@">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <script src="/js/home.js"></script>
   </body>
 
