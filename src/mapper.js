@@ -40,9 +40,11 @@ async function dashboard(req, res) {
     return;
   }
 
+  console.log("USER", r);
   var html = fs.readFileSync(PATH_HOME, 'utf-8');
 
   html = html.replace('@@TOKEN@@', r.token);
+  html = html.replace('@@USER_AVATAR@@', `/img/users/${r.user.user.userId}.svg`);
 
   res.send(html);
 }
