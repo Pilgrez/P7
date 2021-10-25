@@ -11,29 +11,54 @@ body {
   font-family: "WorkSans" !important;
 }
 
+/* Login */
 .login-card {
   margin-left: auto;
   margin-right: auto;
   margin-top: 80px;
 }
 
+.login-logo {
+  object-fit: cover;
+  height: 200px;
+  width: 100%;
+}
+
 /* NavBar */
 .nav {
   border-bottom: 1px solid black;
-  background-color: rgba(0,0,0,0.20);
   color: black;
   min-height: 80px;
   max-height: 80px;
 }
+.nav-logo {
+  max-width: 79px;
+  max-height: 79px;
+}
+#nav-avatar {
+  max-width: 65px;
+  max-height: 65px;
+  margin: auto 20px;
+}
+#nav-loading {
+  margin: auto 10px auto auto;
+}
 .nav .lead {
   margin: auto 45px;
+}
+
+/* Main Content */
+#main-content {
+  max-width: 500px;
+  min-width: 500px;
+  margin: 10px auto;
 }
 
 /* New Post */
 .new-post {
   display: flex;
   background: var(--primary);
-  position: absolute;
+  position: fixed;
   bottom: 0;
   right: 0;
   color: white;
@@ -61,7 +86,7 @@ body {
 
 .post {
   max-width: 500px;
-  margin: auto 50px;
+  margin-bottom: 20px;
 }
 .post-date {
   display: inline-block;
