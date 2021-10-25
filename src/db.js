@@ -14,11 +14,13 @@ const CONFIG = [{
   name: "users",
   idAutoIncrement: "userId",
   fields: [
-    { name: "email", type: "TEXT", nullDefault: false},
-    { name: "creationDate", type: "DATETIME", nullDefault: false},
-    { name: "password", type: "TEXT", nullDefault: true},
-    { name: "displayName", type: "TEXT", nullDefault: true},
-    { name: "token", type: "TEXT", nullDefault: false}
+    { name: "email", type: "TEXT", nullDefault: false },
+    { name: "creationDate", type: "DATETIME", nullDefault: false },
+    { name: "password", type: "TEXT", nullDefault: true },
+    { name: "displayName", type: "TEXT", nullDefault: true },
+    { name: "token", type: "TEXT", nullDefault: false },
+    { name: "isAdmin", type: "BOOLEAN", nullDefault: false, default: "FALSE" },
+    { name: "likedPosts", type: "TEXT", nullDefault: false }
   ]
 }, {
   name: "posts",
@@ -26,8 +28,11 @@ const CONFIG = [{
   fields: [
     { name: "creationDate", type: "DATETIME", nullDefault: false },
     { name: "userId", type: "TEXT", nullDefault: false },
+    { name: "avatar", type:"TEXT", nullDefault:false },
     { name: "type", type: "TEXT", nullDefault: false },
-    { name: "content", type: "TEXT", nullDefault: false }
+    { name: "content", type: "TEXT", nullDefault: false },
+    { name: "likes", type:"INT", nullDefault: false },
+    { name: "comments", type:"INT", nullDefault: false}
   ]
 }];
 
@@ -125,9 +130,10 @@ function buildColCreationQuery(col) {
   for (var i = 0; i < col.fields.length; i++) {
     var f = col.fields[i];
     var n = f.nullDefault ? " NOT NULL" : " NULL";
+    var d = f.hasOwnProperty('default') ? ` DEFAULT ${f.default}` : "";
     var l = i == col.fields.length-1 ? "" : ",";
 
-    query += ` \`${f.name}\` ${f.type}${n}${l} `;
+    query += ` \`${f.name}\` ${f.type}${n}${d}${l} `;
   }
   if (col.hasOwnProperty('primaryKey')) {
     query += `, PRIMARY KEY (\`${col.primaryKey}\`)`;
@@ -245,13 +251,13 @@ async function find(coll, data) {
   });
 }
 
-async function findAll(coll) {
+async function findAll(coll, extra="") {
   var config = getConfigByColl(coll);
   if (config == null) return ({result:false, info:"Invalid table"});
 
   return new Promise((resolve, reject) => {
     try {
-      var query = `SELECT * FROM ${coll}`;
+      var query = `SELECT * FROM ${coll} ${extra}`;
       console.log("[FIND]", query);
 
       module.exports.connection.query(query, function (error, results, fields) {
@@ -259,6 +265,67 @@ async function findAll(coll) {
           resolve({result:false, info:"Error performing 'insert' query", error:error});
           return;
         }
+        resolve({result:true, r:results, fields:fields});
+      });
+    } catch (e) {
+      console.log("Error catched");
+      resolve({result:false, info:"Error performing query", error:e});
+    }
+  });
+}
+
+/*
+  Update
+*/
+
+async function update(coll, data, where) {
+  var config = getConfigByColl(coll);
+  if (config == null) return ({result:false, info:"Invalid table"});
+  console.log("new data", data);
+
+  return new Promise((resolve, reject) => {
+    try {
+      var query = `UPDATE ${coll} SET ? WHERE ${where}`;
+      console.log("[UPDATE]", query);
+
+      module.exports.connection.query(query, data, function (error, results, fields) {
+        if (error != null) {
+          resolve({result:false, info:"Error performing 'update' query", error:error});
+          return;
+        }
+
+        //console.log("error:", error);
+        //console.log("result:", results);
+        //console.log("fields", fields);
+        resolve({result:true, r:results, fields:fields});
+      });
+    } catch (e) {
+      console.log("Error catched");
+      resolve({result:false, info:"Error performing query", error:e});
+    }
+  });
+}
+
+async function updatePost(coll, data) {
+  //UPDATE `posts` SET `likes` = '1' WHERE `posts`.`postId` = 4
+  var config = getConfigByColl(coll);
+  if (config == null) return ({result:false, info:"Invalid table"});
+  console.log("new post", data);
+
+  return new Promise((resolve, reject) => {
+    try {
+      var query = `UPDATE ${coll} SET ? WHERE postId = ${data.postId}`;
+      console.log("[UPDATE]", query);
+
+      module.exports.connection.query(query, data, function (error, results, fields) {
+        if (error != null) {
+          resolve({result:false, info:"Error performing 'update' query", error:error});
+          return;
+        }
+
+        //console.log("error:", error);
+        //console.log("result:", results);
+        //console.log("fields", fields);
         resolve({result:true, r:results, fields:fields});
       });
     } catch (e) {
@@ -337,7 +404,11 @@ module.exports = {
 
   find: find,
   findAll: findAll,
+
   insertOne: insertOne,
+
+  update: update,
+  updatePost: updatePost,
 
   generateToken: function (size=24) {
     var token = "";
