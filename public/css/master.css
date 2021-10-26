@@ -116,6 +116,17 @@ body {
 .post-img {
   display: block;
 }
+.post .delete-post {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 20px;
+  color: red;
+  display: none;
+}
+.post:hover .delete-post {
+  display: block;
+}
 
 /* Comments */
 #comments-container {
@@ -136,6 +147,16 @@ body {
 .comment > p {
   padding: 0;
   margin: auto 15px;
+}
+.delete-comment {
+  position: absolute;
+  right: 0;
+  margin: 10px 25px;
+  color: orange;
+  display: none;
+}
+.comment:hover .delete-comment {
+  display: block;
 }
 
 /* Toast */
