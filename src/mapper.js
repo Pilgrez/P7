@@ -16,7 +16,8 @@ var POSTS = require(__dirname + '/posts.js'),
   USERS = require(__dirname + '/users.js');
 
 const PATH_LOGIN = __dirname + '/../public/login.html',
-  PATH_HOME = __dirname + '/../public/home.html';
+  PATH_HOME = __dirname + '/../public/home.html',
+  PATH_ADMIN = __dirname + '/../public/admin.html';
 
 function register(app) {
   // login page
@@ -51,7 +52,8 @@ async function dashboard(req, res) {
     return;
   }
 
-  var html = fs.readFileSync(PATH_HOME, 'utf-8');
+  console.log("DASHBOARD ADMIN ?", r.user.user.isAdmin);
+  var html = fs.readFileSync(r.user.user.isAdmin == 1 ? PATH_ADMIN : PATH_HOME, 'utf-8');
   //html = html.replace('@@USER_AVATAR@@', `/img/users/${r.user.user.userId}.svg`);
 
   // return user object without sensitive data
