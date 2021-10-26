@@ -3,45 +3,230 @@ document.addEventListener('DOMContentLoaded', start);
 var S = {};
 
 function start() {
-  //drawEmptyPosts();
-  S.newPostHandler = new NewPostHandler();
-  S.mainFrame = new MainFrame();
+  var user = JSON.parse(document.querySelector('#user_data').innerHTML);
+  user.likedPosts = JSON.parse(user.likedPosts);
+  console.log("LOADED USER", user);
 
   S.app = new Vue({
     el: "#main-content",
     data: {
+      user: user,
       posts: []
     },
     methods: {
-      togglePostLike: togglePostLike
+      togglePostLike: togglePostLike,
+      togglePostComment: togglePostComment,
+      commentPost: commentPost,
+      showProfile: showProfile
     }
   });
 
+  S.newPostHandler = new NewPostHandler();
+  S.profileHandler = new ProfileHandler();
+  S.mainFrame = new MainFrame();
+
+  refreshUserAvatar();
   loading(false);
 }
 
+function refreshUserAvatar() {
+  document.querySelector('#nav-avatar').src = S.app.user.avatar;
+}
+
+function showProfile() {
+  S.profileHandler.showModal();
+}
+
+function moveTo(path) {
+  document.querySelector('body').innerHTML += `<form action="${path}" id="moveto"></form>`;
+  document.querySelector('#moveto').submit();
+}
+
+/* Comment */
+async function togglePostComment(postId, force=false) {
+  var container = document.querySelector(`#post-${postId} #comments-container`);
+
+  // if displayed hide
+  console.log(container.style.display);
+  if (container.style.display == "block" && !force) {
+    container.style.display = "none";
+    return;
+  }
+
+
+  // load comment
+  loading(true);
+  var result = await Api.send("/posts/getComments", {postId: postId});
+  if (!result.result) {
+    new Toast(result);
+    loading(false);
+    return;
+  }
+
+  buildComments(container.querySelector('.comments-list'), result.comments);
+  container.style.display = "block";
+  loading(false);
+}
+
+function buildComments(container, list) {
+  container.innerHTML = "";
+
+  for (var i = 0; i < list.length; i++) {
+    var c = list[i];
+    container.innerHTML += `
+      <div class="comment">
+        <img class="post-avatar" src="${c.avatar}">
+        <p class="display-name">${c.displayName}</p>
+        <p>${c.comment}</p>
+      </div>
+    `;
+  }
+}
+
+async function commentPost(postId) {
+  var input = document.querySelector(`#post-${postId} #comment-input`);
+  if (input.value == "") {
+    input.classList.add('is-invalid');
+    return;
+  }
+
+  loading(true);
+  input.classList.remove('is-invalid');
+  var result = await Api.send('/posts/comment', {postId:postId, comment:input.value});
+  console.log("post result");
+  loading(false);
+  new Toast(result);
+  if (!result.result) return;
+
+  input.value = "";
+  await togglePostComment(postId, true);
+}
+
+/* Like */
 async function togglePostLike(postId) {
   loading(true);
-  console.log("LIKE POST", postId);
   var result = await Api.send("/posts/like", {postId:postId});
+  if (!result.result) {
+    new Toast(result);
+    loading(false);
+    return;
+  }
 
-  console.log("POST LIKE RESULT", result);
+  for (var i = 0; i < S.app.posts.length; i++) {
+    if (S.app.posts[i].postId == postId) {
+      if (result.status == "liked") S.app.posts[i].likes++;
+      if (result.status == "unliked") S.app.posts[i].likes--;
+      break;
+    }
+  }
+
+  document.querySelector(`#post-${postId} .fa-heart`).style.color = result.status == "liked" ? "red" : "";
+  loading(false);
+}
+
+/* Profile Handler */
+class ProfileHandler {
+
+  constructor() {
+    this.modal = document.querySelector('#profile-modal');
+    this.displayName = this.modal.querySelector('#display-name');
+    this.email = this.modal.querySelector('#email');
+    this.avatar = this.modal.querySelector('#avatar');
+
+    document.querySelector('#nav-avatar').addEventListener('click', () => this.showModal());
+    this.modal.querySelector('.btn-close').addEventListener('click', () => this.closeModal());
+    this.modal.querySelector('#delete').addEventListener('click', () => this.deleteAccount());
+    this.modal.querySelector('#logout').addEventListener('click', () => moveTo('/'));
+    this.modal.querySelector('#save').addEventListener('click', () => this.save());
+
+    this.bind();
+  }
+
+  showModal() {
+    this.modal.classList.add('show');
+    this.modal.style.display = "block";
+  }
+
+  closeModal() {
+    this.modal.classList.remove('show');
+    this.modal.style.display = "none";
+  }
+
+  bind() {
+    this.displayName.value = S.app.user.displayName;
+    this.email.value = S.app.user.email;
+  }
+
+  async save() {
+    if (!this.verify()) return;
+
+    loading(true);
+    var formData = new FormData();
+    formData.append("displayName", this.displayName.value);
+    formData.append("email", this.email.value);
+    formData.append("x-token", S.app.user.token);
+    if (this.avatar.files.length >= 1) formData.append("image", this.avatar.files[0]);
+
+    var result = await Api.send('/users/update', formData, true);
+    new Toast(result);
+    loading(false);
+    if (!result.result) return;
+
+    S.app.user.displayName = this.displayName.value;
+    S.app.user.email = this.email.value;
+    if (this.avatar.files.length >= 1) S.app.user.avatar = result.avatar;
+
+    this.bind();
+    refreshUserAvatar();
+    this.closeModal();
+  }
+
+  verify() {
+    var exit = true;
+    if (this.displayName.value == "") {
+      this.displayName.classList.add('is-invalid');
+      exit = false;
+    } else {
+      this.displayName.classList.remove('is-invalid');
+    }
+
+    if (this.email.value == "") {
+      this.email.classList.add('is-invalid');
+      exit = false;
+    } else {
+      this.email.classList.remove('is-invalid');
+    }
+    return exit;
+  }
+
+  async deleteAccount() {
+    loading(true);
+    var result = await Api.send('/users/deleteAccount', {});
+    console.log("DELETE", result);
+    new Toast(result);
+    loading(false);
+    if (!result.result) return;
+    moveTo('/');
+  }
+
 }
 
 /* New Post Handler */
 class NewPostHandler {
+
+  static typeText = "text";
+  static typeImage = "image";
+
   constructor() {
     this.modal = document.querySelector('#new-post-modal');
     this.modal.querySelector('.btn-close').addEventListener('click', (evt) => this.closeModal(true));
     this.modal.querySelector('#create').addEventListener('click', async (evt) => await this.create());
     this.textarea = this.modal.querySelector('#post-content');
+    this.imageInput = this.modal.querySelector('#post-file');
     document.querySelector('.new-post').addEventListener('click', (evt) => this.onClick(evt));
   }
 
-  onClick(evt) {
-    console.log("New Post: click");
-    this.showModal();
-  }
+  onClick(evt) { this.showModal(); }
 
   showModal() {
     this.modal.classList.add('show');
@@ -58,9 +243,7 @@ class NewPostHandler {
     if (!this.verify()) return;
     loading(true);
 
-    var post = { content:this.textarea.value };
-    var result = await Api.send('/posts/create', post);
-    console.log(result);
+    var result = await this.sendPost();
 
     loading(false);
     new Toast(result);
@@ -70,13 +253,48 @@ class NewPostHandler {
   }
 
   verify() {
-    if (this.textarea.value == "") {
-      this.textarea.classList.add('is-invalid');
-      return false;
-    }
+    var type = this.getType();
+    console.log("GIVEN TYPE", type);
 
-    this.textarea.classList.remove('is-invalid');
-    return true;
+    if (type == NewPostHandler.typeImage) {
+      if (this.imageInput.files.length < 1) {
+        this.imageInput.classList.add('is-invalid');
+        return false;
+      }
+      this.imageInput.classList.remove('is-invalid');
+      return true;
+    } else {
+      if (this.textarea.value == "") {
+        this.textarea.classList.add('is-invalid');
+        return false;
+      }
+      this.textarea.classList.remove('is-invalid');
+      return true;
+    }
+  }
+
+  async sendPost() {
+    if (this.getType() == NewPostHandler.typeText) {
+      var post = { type:"text", content:this.textarea.value };
+      var result = await Api.send('/posts/create', post);
+      console.log(result);
+      return result;
+    } else {
+      var formData = new FormData();
+      formData.append("type", "image");
+      formData.append("x-token", S.app.user.token);
+      formData.append("image", this.imageInput.files[0]);
+      console.log("FormDATA", formData);
+      var result = await Api.send('/posts/create', formData, true);
+      console.log("IMG POST", result);
+      return result;
+    }
+  }
+
+  getType() {
+    var type = this.modal.querySelector('ul.nav-tabs').querySelector('.active').href.split('#')[1];
+    console.log("SELECTED TYPE", type);
+    return type == "new_post_img" ? NewPostHandler.typeImage : NewPostHandler.typeText;
   }
 }
 
@@ -155,59 +373,6 @@ class MainFrame {
 }
 
 /*
-  Post
-
-
-class Post {
-
-  constructor(data) {
-    this.elem = null;
-    this.userId = data.userId;
-    this.type = data.type;
-    this.content = data.content;
-    this.creationDate = new Date(data.creationDate);
-    this.postId = data.postId;
-  }
-
-  build(elem) {
-    var html = `
-      <div class="card card-hover post" id="post-${this.postId}">
-
-        <div class="card-body">
-          <img class="post-avatar" src="/users/${this.userId}.svg">
-          <p class="post-date">${this.getDate()}</p>
-          <p class="card-text fs-sm">${this.content}</p>
-        </div>
-
-        <div class="card-footer fs-sm text-muted">
-          <i class="fal fa-heart like"></i>
-          <i class="fal fa-comment"></i>
-        </div>
-
-      </div>
-    `;
-    elem.innerHTML += html;
-    this.elem = document.querySelector(`#post-${this.postId}`);
-    this.listen();
-  }
-
-  getDate() {
-    const options = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    };
-    return this.creationDate.toLocaleDateString(options);
-  }
-
-  listen() {
-
-  }
-
-}
-*/
-
-/*
   Form
 */
 function verifyForm(list) {
@@ -258,9 +423,9 @@ class Api {
   constructor() {}
 
 
-  static send(url, body) {
+  static send(url, body, raw=false) {
     return new Promise((resolve, reject) => {
-      body['x-token'] = document.querySelector('#user_token').value;
+      if (!raw) body['x-token'] = S.app.user.token;
 
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
@@ -275,8 +440,8 @@ class Api {
           }
       };
       xhttp.open("POST", url, true);
-      xhttp.setRequestHeader("Content-Type", "application/json");
-      xhttp.send(JSON.stringify(body));
+      if (!raw) xhttp.setRequestHeader("Content-Type","application/json");
+      xhttp.send(raw ? body : JSON.stringify(body));
     });
   }
 
