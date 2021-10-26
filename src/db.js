@@ -18,6 +18,7 @@ const CONFIG = [{
     { name: "creationDate", type: "DATETIME", nullDefault: false },
     { name: "password", type: "TEXT", nullDefault: true },
     { name: "displayName", type: "TEXT", nullDefault: true },
+    { name: "avatar", type: "TEXT", nullDefault: false},
     { name: "token", type: "TEXT", nullDefault: false },
     { name: "isAdmin", type: "BOOLEAN", nullDefault: false, default: "FALSE" },
     { name: "likedPosts", type: "TEXT", nullDefault: false }
@@ -33,6 +34,15 @@ const CONFIG = [{
     { name: "content", type: "TEXT", nullDefault: false },
     { name: "likes", type:"INT", nullDefault: false },
     { name: "comments", type:"INT", nullDefault: false}
+  ]
+}, {
+  name: "comments",
+  idAutoIncrement: "commentId",
+  fields: [
+    { name: "creationDate", type: "DATETIME", nullDefault: false },
+    { name: "userId", type: "TEXT", nullDefault: false },
+    { name: "postId", type: "TEXT", nullDefault: false },
+    { name: "comment", type: "TEXT", nullDefault: false },
   ]
 }];
 
@@ -123,7 +133,6 @@ async function createColumn(col) {
   return result;
 }
 
-//CREATE TABLE `P7`.`users` ( `userId` TEXT NOT NULL , `email` TEXT NOT NULL , `creationDate` DATETIME NOT NULL , `username` TEXT NOT NULL , `password` TEXT NULL , `displayName` TEXT NULL DEFAULT NULL , `avatar` TEXT NULL DEFAULT '/img/avatar_default.svg' , PRIMARY KEY (`userId`)) ENGINE = InnoDB;
 function buildColCreationQuery(col) {
   var query = `CREATE TABLE \`${ARG.db.database}\`.\`${col.name}\` (`;
 
@@ -177,6 +186,8 @@ function getConfigByColl(coll) {
       return (CONFIG[0]);
     case "posts":
       return (CONFIG[2]);
+    case "comments":
+      return (CONFIG[3]);
     default:
       return null;
   }
@@ -242,7 +253,7 @@ async function find(coll, data) {
         //console.log("error:", error);
         //console.log("result:", results);
         //console.log("fields", fields);
-        resolve({result:true, r:results, fields:fields});
+        resolve({result:true, r:results});
       });
     } catch (e) {
       console.log("Error catched");
@@ -265,7 +276,7 @@ async function findAll(coll, extra="") {
           resolve({result:false, info:"Error performing 'insert' query", error:error});
           return;
         }
-        resolve({result:true, r:results, fields:fields});
+        resolve({result:true, r:results});
       });
     } catch (e) {
       console.log("Error catched");
@@ -297,7 +308,7 @@ async function update(coll, data, where) {
         //console.log("error:", error);
         //console.log("result:", results);
         //console.log("fields", fields);
-        resolve({result:true, r:results, fields:fields});
+        resolve({result:true, r:results});
       });
     } catch (e) {
       console.log("Error catched");
@@ -409,6 +420,8 @@ module.exports = {
 
   update: update,
   updatePost: updatePost,
+
+  deleteOne: deleteOne,
 
   generateToken: function (size=24) {
     var token = "";
