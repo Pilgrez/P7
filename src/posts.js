@@ -227,6 +227,30 @@ async function comment(req, res) {
 }
 
 /*
+  Delete
+*/
+
+async function deletePost(req, res) {
+  if (req.user.isAdmin != 1) return ({result:false, info:"Not admin!"});
+  if (!req.body.hasOwnProperty('postId')) return ({result:false, info:"No postId"});
+
+  var result = await DB.deleteOne('posts', {postId: req.body.postId});
+  if (!result.result) return (result);
+
+  return ({result:true, info:"Post removed"});
+}
+
+async function deletePost(req, res) {
+  if (req.user.isAdmin != 1) return ({result:false, info:"Not admin!"});
+  if (!req.body.hasOwnProperty('commentId')) return ({result:false, info:"No commentId"});
+
+  var result = await DB.deleteOne('comments', {commentId: req.body.commentId});
+  if (!result.result) return (result);
+
+  return ({result:true, info:"Comment removed"});
+}
+
+/*
   Map & Module definition
 */
 
@@ -242,9 +266,10 @@ async function map(req, res) {
       return await getComments(req, res);
     case "comment":
       return await comment(req, res);
-    /*case "delete":
-      return await delete(req, res);
-    */
+    case "delete":
+      return await deletePost(req, res);
+    case "deleteComment":
+      return await deletePost(req, res);
     default:
       return ({result:false, info: `Unknown path under posts: ${req.params.action}`});
   }
