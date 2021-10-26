@@ -22,7 +22,6 @@ async function start() {
 
   // set upload dir as public
   app.use(express.static(__dirname + '/public/'));
-  app.use(express.static(__dirname + '/uploads/'));
 
   // map all route
   MAPPER.register(app);
