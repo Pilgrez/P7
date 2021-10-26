@@ -75,12 +75,12 @@ async function register(req, res) {
     creationDate: new Date(),
     password: hash.hash,
     displayName: req.body.email.split("@")[0],
+    avatar: "none",
     token: DB.generateToken(48)
   }
 
   // push to DB
   var insert = await DB.insertOne('users', user);
-  console.log("PUSH", insert);
   if (!insert.result) {
     res.json({result:false, info:"Internal error"});
     return;
@@ -89,7 +89,7 @@ async function register(req, res) {
   // create avatar
   var avatar = await createAvatar(user.email);
   if (!avatar.result) {
-    res.json({result:false, info:"Error creating your avatar, but you are register !"});
+    res.json({result:false, info:"Error creating your avatar, please contact admin !"});
     return;
   }
 
@@ -108,6 +108,11 @@ async function createAvatar(email) {
     avatar = avatar.replace(new RegExp(/@@COLOR@@/, 'g'), color);
     console.log(new RegExp(/@@COLOR@@/, 'g'), color);
     fs.writeFileSync(out, avatar, 'utf-8');
+
+    r.user.avatar = `/img/users/${r.user.userId}.svg`;
+    var update = await DB.update('users', r.user, `userId = ${r.user.userId}`);
+    if (!update.result) return (update);
+
     return ({result:true});
   } catch (e) {
     console.log(e);
@@ -121,6 +126,41 @@ function getRandomColor() {
     color += letters[Math.floor(Math.random() * 16)];
   }
   return color;
+}
+
+/*
+  Delete Account
+*/
+
+async function deleteAccount(req, res) {
+
+  var result = await DB.deleteOne('users', {userId: req.user.userId});
+  if (!result.result) return (result);
+
+  return ({result:true, info:"Account removed, bye !"});
+}
+
+/*
+  Update Account
+*/
+
+async function updateAccount(req, res) {
+  // rebuild json if no picture -> object null prototype
+  if (!req.file) req.body = JSON.parse(JSON.stringify(req.body));
+
+  if (req.body.hasOwnProperty('displayName')) req.user.displayName = req.body.displayName;
+  if (req.body.hasOwnProperty('email')) {
+    if (!isValidEmail(req.body.email)) return ({result:false, info:"Invalid Email"});
+    req.user.email = req.body.email;
+  }
+
+  // check if new avatar
+  if (req.file) req.user.avatar = '/uploads/'+req.file.filename;
+
+  var update = await DB.update("users", req.user, `userId = ${req.user.userId}`);
+  if (!update.result) return (update);
+
+  return ({result:true, info:"Profile updated", avatar:req.user.avatar});
 }
 
 /*
@@ -157,11 +197,33 @@ async function getByToken(token) {
   return ({result:true, user:r.r[0]});
 }
 
+/*
+  Map
+*/
+
+async function map(req, res) {
+  switch (req.params.action) {
+    case "deleteAccount":
+      return await deleteAccount(req, res);
+    case "update":
+      return await updateAccount(req, res);
+    default:
+      return ({result:false, info: `Unknown path under users: ${req.params.action}`});
+  }
+}
+
+function isValidEmail(email) {
+  const reg = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return reg.test(String(email).toLowerCase());
+}
+
 module.exports = {
   login: login,
   register: register,
   authenticate: authenticate,
 
   getByEmail: getByEmail,
-  loginUser: loginUser
+  loginUser: loginUser,
+
+  map: map
 }
